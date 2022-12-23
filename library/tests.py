@@ -35,7 +35,7 @@ class BookListTests(APITestCase):
                 self.assertFalse('available_copies' in data)
 
 
-class BorrowListViewTestCase(APITestCase):
+class BorrowTestCase(APITestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
@@ -62,4 +62,15 @@ class BorrowListViewTestCase(APITestCase):
 
     def test_borrow_list_unauthorized(self):
         response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_borrow_renew_authorized(self):        
+        self.client.force_authenticate(user=self.user)
+        data = {'book': self.book.id, 'borrowed_at': self.borrow.borrowed_at, 'due_at': self.borrow.due_at}
+        response = self.client.put(reverse('library:borrow-renew', kwargs={'pk': self.borrow.id}), data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['message'], 'Borrow renewed successfully')
+
+    def test_borrow_renew_unauthorized(self):
+        response = self.client.put(reverse('library:borrow-renew', kwargs={'pk': self.borrow.id}))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

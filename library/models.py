@@ -32,6 +32,7 @@ class Borrow(models.Model):
     borrowed_at = models.DateTimeField()
     due_at = models.DateTimeField()
     returned_at = models.DateTimeField(null=True, blank=True)
+    renewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         unique_together = ('user', 'book',)

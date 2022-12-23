@@ -34,4 +34,4 @@ class BookSerializer(serializers.ModelSerializer):
 class BorrowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Borrow
-        fields = ('id', 'book', 'borrowed_at', 'due_at', 'returned_at',)
+        fields = ('id', 'book', 'borrowed_at', 'due_at', 'returned_at', 'renewed_at',)
