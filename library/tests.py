@@ -6,7 +6,7 @@ from django.utils.timezone import timedelta
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from library.models import Book, Borrow
+from library.models import Book, Borrow, UserRole
 
 User = get_user_model()
 
@@ -30,5 +30,36 @@ class BookListTests(APITestCase):
                 self.assertEqual(data['available_copies'], 2)
                 self.assertFalse('due_at' in data)
             elif data['title'] == 'Book 2':
+                print(" DUE AT BOOK", data['due_at'])
                 self.assertEqual(data['due_at'], self.test_due_at)
                 self.assertFalse('available_copies' in data)
+
+
+class BorrowListViewTestCase(APITestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='testuser', password='testpass'
+        )
+        self.user_role = UserRole.objects.create(user=self.user, role=UserRole.ROLE_CHOICES[0][0])
+        self.book = Book.objects.create(
+            title='Book 1', author='Test Author',
+            total_copies=1, available_copies=1
+        )
+        self.borrow = Borrow.objects.create(
+            user=self.user, book=self.book,
+            borrowed_at=timezone.now(),
+            due_at=timezone.now() + timedelta(days=30)
+        )
+        self.url = reverse('library:borrow-list')
+
+    def test_borrow_list_authorized(self):
+        self.client.force_authenticate(self.user)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]['book'], self.book.pk)
+        self.assertEqual(response.data[0]['due_at'], self.borrow.due_at.strftime('%Y-%m-%dT%H:%M:%S.%fZ'))
+
+    def test_borrow_list_unauthorized(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

@@ -29,3 +29,9 @@ class BookSerializer(serializers.ModelSerializer):
         if obj.available_copies <= 0:
             due_at = obj.borrow_set.aggregate(Min('due_at'))['due_at__min']
             return due_at
+
+
+class BorrowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Borrow
+        fields = ('id', 'book', 'borrowed_at', 'due_at', 'returned_at',)
