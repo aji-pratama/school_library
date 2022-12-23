@@ -31,7 +31,6 @@ class BookListTests(APITestCase):
                 self.assertEqual(data['available_copies'], 2)
                 self.assertFalse('due_at' in data)
             elif data['title'] == 'Book 2':
-                print(" DUE AT BOOK", data['due_at'])
                 self.assertEqual(data['due_at'], self.test_due_at)
                 self.assertFalse('available_copies' in data)
 
@@ -86,4 +85,46 @@ class BorrowTestCase(APITestCase):
     def test_borrow_history_unauthorized(self):
         self.client.force_authenticate(user=None)
         response = self.client.get(reverse('library:borrow-history'))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class LibrarianBorrowViewTestCase(APITestCase):
+    def setUp(self):
+        self.librarian = User.objects.create_user(
+            username='librarian',
+            password='password',
+        )
+        self.librarian_user_role = UserRole.objects.create(user=self.librarian, role=UserRole.ROLE_CHOICES[1][0])
+        self.student = User.objects.create_user(
+            username='student',
+            password='password',
+        )
+        self.student_user_role = UserRole.objects.create(user=self.student, role=UserRole.ROLE_CHOICES[0][0])
+        self.book = Book.objects.create(
+            title='Book 1', author='Test Author',
+            total_copies=1, available_copies=1
+        )
+        self.borrow = Borrow.objects.create(
+            user=self.student,
+            book=self.book,
+            borrowed_at=timezone.now(),
+            due_at=timezone.now() + timedelta(days=30)
+        )
+        self.renew = Borrow.objects.create(
+            user=self.student,
+            book=self.book,
+            borrowed_at=timezone.now(),
+            due_at=timezone.now() + timedelta(days=30),
+            renewed_at=timezone.now()
+        )
+
+    def test_borrow_list_authorized(self):
+        self.client.login(username='librarian', password='password')
+        response = self.client.get(reverse('library:librarian-borrow-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(self.borrow.id, [item['id'] for item in response.data])
+        self.assertIn(self.renew.id, [item['id'] for item in response.data])
+
+    def test_borrow_list_unauthorized(self):
+        response = self.client.get(reverse('library:librarian-borrow-list'))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

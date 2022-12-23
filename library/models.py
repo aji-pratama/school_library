@@ -34,8 +34,5 @@ class Borrow(models.Model):
     returned_at = models.DateTimeField(null=True, blank=True)
     renewed_at = models.DateTimeField(null=True, blank=True)
 
-    class Meta:
-        unique_together = ('user', 'book',)
-
     def __str__(self):
         return f"{self.user} - {self.book}"

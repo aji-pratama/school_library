@@ -8,8 +8,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 
 from .models import Book, Borrow
-from .serializers import BookSerializer, BorrowSerializer
-from .permissions import IsStudent
+from .serializers import BookSerializer, BorrowSerializer, LibrarianBorrowSerializer
+from .permissions import IsStudent, IsLibrarian
 
 
 class BookListView(generics.ListAPIView):
@@ -55,3 +55,17 @@ class BorrowHistoryView(generics.ListAPIView):
 
     def get_queryset(self):
         return Borrow.objects.filter(user=self.request.user).exclude(renewed_at=None)
+
+
+class LibrarianBorrowListView(generics.ListAPIView):
+    permission_classes = (IsLibrarian,)
+    serializer_class = LibrarianBorrowSerializer
+
+    def get_queryset(self):
+        return Borrow.objects.all().order_by('-borrowed_at')
+
+
+class LibrarianBorrowDetailView(generics.RetrieveAPIView):
+    permission_classes = (IsLibrarian,)
+    serializer_class = LibrarianBorrowSerializer
+    queryset = Borrow.objects.all()
