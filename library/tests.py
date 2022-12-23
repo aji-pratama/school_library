@@ -128,3 +128,45 @@ class LibrarianBorrowViewTestCase(APITestCase):
     def test_borrow_list_unauthorized(self):
         response = self.client.get(reverse('library:librarian-borrow-list'))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class MarkTestCase(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='testuser', password='testpass'
+        )
+        self.librarian = User.objects.create_user(
+            username='testlibrarian', password='testpass'
+        )
+        self.librarian_user_role = UserRole.objects.create(user=self.librarian, role=UserRole.ROLE_CHOICES[1][0])
+
+        self.student = User.objects.create_user(
+            username='student',
+            password='password',
+        )
+        self.student_user_role = UserRole.objects.create(user=self.student, role=UserRole.ROLE_CHOICES[0][0])
+        self.book = Book.objects.create(
+            title='Book 1', author='Test Author',
+            total_copies=1, available_copies=1
+        )
+        self.borrow = Borrow.objects.create(
+            user=self.student,
+            book=self.book,
+            borrowed_at=timezone.now(),
+            due_at=timezone.now() + timedelta(days=30)
+        )
+        self.url = reverse('library:borrow-markreturn', kwargs={'pk': self.borrow.pk})
+        self.client.force_authenticate(self.librarian)
+
+    def test_mark_return_authorized(self):
+        data = {'book': self.book.id, 'borrowed_at': self.borrow.borrowed_at, 'due_at': self.borrow.due_at, 'returned_at': timezone.now()}
+        response = self.client.put(self.url, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_mark_borrowed(self):
+        request_data = {'user': self.student.pk, 'book': self.book.pk, 'borrowed_at': '2022-12-23T00:00:00Z', 'due_at': '2022-12-30T00:00:00Z'}
+        response = self.client.post(reverse('library:borrow-markborrow', args=[self.borrow.pk]), data=request_data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Borrow.objects.count(), 1)
+        self.assertEqual(Borrow.objects.first().user, self.student)
+        self.assertEqual(Borrow.objects.first().book, self.book)

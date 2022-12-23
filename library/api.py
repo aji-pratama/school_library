@@ -69,3 +69,33 @@ class LibrarianBorrowDetailView(generics.RetrieveAPIView):
     permission_classes = (IsLibrarian,)
     serializer_class = LibrarianBorrowSerializer
     queryset = Borrow.objects.all()
+
+
+class BorrowMarkBorrowedView(generics.CreateAPIView):
+    permission_classes = (IsAuthenticated, IsLibrarian)
+    serializer_class = BorrowSerializer
+    queryset = Borrow.objects.all()
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        borrow = serializer.save()
+        borrow.borrowed_at = timezone.now()
+        borrow.due_at = timezone.now() + timedelta(days=30)
+        borrow.save()
+        return Response({'message': 'Book marked as borrowed successfully'}, status=status.HTTP_201_CREATED)
+
+
+class BorrowMarkReturnedView(generics.UpdateAPIView):
+    permission_classes = (IsAuthenticated, IsLibrarian)
+    serializer_class = BorrowSerializer
+    queryset = Borrow.objects.all()
+    http_method_names = ['put']
+
+    def update(self, request, *args, **kwargs):
+        borrow = self.get_object()
+        serializer = self.get_serializer(borrow, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        borrow.returned_at = timezone.now()
+        borrow.save()
+        return Response({'message': 'Book marked as returned successfully'})

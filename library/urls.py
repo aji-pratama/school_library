@@ -11,4 +11,6 @@ urlpatterns = [
     path('borrow/history/', api.BorrowHistoryView.as_view(), name='borrow-history'),
     path('librarian-borrow/', api.LibrarianBorrowListView.as_view(), name='librarian-borrow-list'),
     path('librarian-borrow/<int:pk>/', api.LibrarianBorrowDetailView.as_view(), name='librarian-borrow-detail'),
+    path('borrow/markreturned/<int:pk>/', api.BorrowMarkBorrowedView.as_view(), name='borrow-markborrow'),
+    path('borrow/markborrow/<int:pk>/', api.BorrowMarkReturnedView.as_view(), name='borrow-markreturn'),
 ]
