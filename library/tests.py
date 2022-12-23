@@ -6,7 +6,8 @@ from django.utils.timezone import timedelta
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from library.models import Book, Borrow, UserRole
+from .models import Book, Borrow, UserRole
+from .serializers import BorrowSerializer
 
 User = get_user_model()
 
@@ -52,6 +53,7 @@ class BorrowTestCase(APITestCase):
             due_at=timezone.now() + timedelta(days=30)
         )
         self.url = reverse('library:borrow-list')
+        self.serializers = BorrowSerializer
 
     def test_borrow_list_authorized(self):
         self.client.force_authenticate(self.user)
@@ -73,4 +75,15 @@ class BorrowTestCase(APITestCase):
 
     def test_borrow_renew_unauthorized(self):
         response = self.client.put(reverse('library:borrow-renew', kwargs={'pk': self.borrow.id}))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_borrow_history_authorized(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(reverse('library:borrow-history'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # TODO: create test case self.assertEqual(response.data, self.serializers.data)
+
+    def test_borrow_history_unauthorized(self):
+        self.client.force_authenticate(user=None)
+        response = self.client.get(reverse('library:borrow-history'))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

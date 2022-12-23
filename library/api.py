@@ -47,3 +47,11 @@ class BorrowRenewView(generics.UpdateAPIView):
         borrow.renewed_at = timezone.now()
         borrow.save()
         return Response({'message': 'Borrow renewed successfully'})
+
+
+class BorrowHistoryView(generics.ListAPIView):
+    permission_classes = (IsAuthenticated, IsStudent)
+    serializer_class = BorrowSerializer
+
+    def get_queryset(self):
+        return Borrow.objects.filter(user=self.request.user).exclude(renewed_at=None)
