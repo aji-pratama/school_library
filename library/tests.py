@@ -13,7 +13,7 @@ User = get_user_model()
 
 
 class BookListTests(APITestCase):
-    test_due_at = timezone.now() + timedelta(weeks=2)
+    test_due_at = timezone.now() + timedelta(days=30)
 
     def setUp(self):
         self.book1 = Book.objects.create(title='Book 1', author='Author 1', total_copies=2, available_copies=2)
@@ -51,6 +51,11 @@ class BorrowTestCase(APITestCase):
             borrowed_at=timezone.now(),
             due_at=timezone.now() + timedelta(days=30)
         )
+        self.borrow_old = Borrow.objects.create(
+            user=self.user, book=self.book,
+            borrowed_at=timezone.now() - timedelta(days=60),
+            due_at=timezone.now() - timedelta(days=30)
+        )
         self.url = reverse('library:borrow-list')
         self.serializers = BorrowSerializer
 
@@ -80,7 +85,7 @@ class BorrowTestCase(APITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(reverse('library:borrow-history'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # TODO: create test case self.assertEqual(response.data, self.serializers.data)
+        self.assertEqual(response.data[0]['due_at'], self.borrow_old.due_at.strftime('%Y-%m-%dT%H:%M:%S.%fZ'))
 
     def test_borrow_history_unauthorized(self):
         self.client.force_authenticate(user=None)
@@ -167,6 +172,6 @@ class MarkTestCase(APITestCase):
         request_data = {'user': self.student.pk, 'book': self.book.pk, 'borrowed_at': '2022-12-23T00:00:00Z', 'due_at': '2022-12-30T00:00:00Z'}
         response = self.client.post(reverse('library:borrow-markborrow', args=[self.borrow.pk]), data=request_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Borrow.objects.count(), 1)
+        self.assertEqual(Borrow.objects.count(), 2)
         self.assertEqual(Borrow.objects.first().user, self.student)
         self.assertEqual(Borrow.objects.first().book, self.book)

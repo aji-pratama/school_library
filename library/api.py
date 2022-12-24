@@ -22,7 +22,7 @@ class BorrowListView(generics.ListAPIView):
     serializer_class = BorrowSerializer
 
     def get_queryset(self):
-        return Borrow.objects.filter(user=self.request.user).order_by('-borrowed_at')
+        return Borrow.objects.filter(user=self.request.user, due_at__gt=timezone.now()).order_by('-borrowed_at')
 
 
 class BorrowRenewView(generics.UpdateAPIView):
@@ -54,7 +54,7 @@ class BorrowHistoryView(generics.ListAPIView):
     serializer_class = BorrowSerializer
 
     def get_queryset(self):
-        return Borrow.objects.filter(user=self.request.user).exclude(renewed_at=None)
+        return Borrow.objects.filter(user=self.request.user, due_at__lt=timezone.now()).order_by('-borrowed_at')
 
 
 class LibrarianBorrowListView(generics.ListAPIView):
@@ -73,7 +73,7 @@ class LibrarianBorrowDetailView(generics.RetrieveAPIView):
 
 class BorrowMarkBorrowedView(generics.CreateAPIView):
     permission_classes = (IsAuthenticated, IsLibrarian)
-    serializer_class = BorrowSerializer
+    serializer_class = LibrarianBorrowSerializer
     queryset = Borrow.objects.all()
     
     def create(self, request, *args, **kwargs):
@@ -88,7 +88,7 @@ class BorrowMarkBorrowedView(generics.CreateAPIView):
 
 class BorrowMarkReturnedView(generics.UpdateAPIView):
     permission_classes = (IsAuthenticated, IsLibrarian)
-    serializer_class = BorrowSerializer
+    serializer_class = LibrarianBorrowSerializer
     queryset = Borrow.objects.all()
     http_method_names = ['put']
 
