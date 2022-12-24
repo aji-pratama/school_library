@@ -71,7 +71,7 @@ class LibrarianBorrowDetailView(generics.RetrieveAPIView):
     queryset = Borrow.objects.all()
 
 
-class BorrowMarkBorrowedView(generics.CreateAPIView):
+class LibrarianBorrowCreateView(generics.CreateAPIView):
     permission_classes = (IsLibrarian,)
     serializer_class = LibrarianBorrowSerializer
     queryset = Borrow.objects.all()
@@ -86,7 +86,7 @@ class BorrowMarkBorrowedView(generics.CreateAPIView):
         return Response({'message': 'Book marked as borrowed successfully'}, status=status.HTTP_201_CREATED)
 
 
-class BorrowMarkReturnedView(generics.UpdateAPIView):
+class LibrarianBorrowReturnView(generics.UpdateAPIView):
     permission_classes = (IsLibrarian,)
     serializer_class = LibrarianBorrowSerializer
     queryset = Borrow.objects.all()
