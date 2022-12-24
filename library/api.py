@@ -26,7 +26,7 @@ class BorrowListView(generics.ListAPIView):
 
 
 class BorrowRenewView(generics.UpdateAPIView):
-    permission_classes = (IsAuthenticated, IsStudent)
+    permission_classes = (IsStudent,)
     serializer_class = BorrowSerializer
     queryset = Borrow.objects.all()
 
@@ -50,7 +50,7 @@ class BorrowRenewView(generics.UpdateAPIView):
 
 
 class BorrowHistoryView(generics.ListAPIView):
-    permission_classes = (IsAuthenticated, IsStudent)
+    permission_classes = (IsStudent,)
     serializer_class = BorrowSerializer
 
     def get_queryset(self):
@@ -72,7 +72,7 @@ class LibrarianBorrowDetailView(generics.RetrieveAPIView):
 
 
 class BorrowMarkBorrowedView(generics.CreateAPIView):
-    permission_classes = (IsAuthenticated, IsLibrarian)
+    permission_classes = (IsLibrarian,)
     serializer_class = LibrarianBorrowSerializer
     queryset = Borrow.objects.all()
     
@@ -87,7 +87,7 @@ class BorrowMarkBorrowedView(generics.CreateAPIView):
 
 
 class BorrowMarkReturnedView(generics.UpdateAPIView):
-    permission_classes = (IsAuthenticated, IsLibrarian)
+    permission_classes = (IsLibrarian,)
     serializer_class = LibrarianBorrowSerializer
     queryset = Borrow.objects.all()
     http_method_names = ['put']
