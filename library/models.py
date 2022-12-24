@@ -12,6 +12,9 @@ class UserRole(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES)
 
+    def __str__(self):
+        return f"{self.user.username} - {self.get_role_display()}"
+
 
 class Book(models.Model):
     title = models.CharField(max_length=255)
